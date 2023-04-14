@@ -29,7 +29,7 @@ class PagesController extends Controller
      */
     public function register(Request $request)
     {
-
+        //We will usually create a custom Request, so can validate more precisely
         $data = $request->validate([
             'first_name' => ['required'],
             'last_name' => ['required'],
@@ -39,6 +39,10 @@ class PagesController extends Controller
             'subscribed' => [],
         ]);
 
+        /*
+        * With a bit more of time, we must follow some good practices, for example create some services and repositories,
+        * take adavantage of OOP with Providers and other classes, separte the bussiness logic, data logic, etc.
+        */
         $user = User::firstOrCreate(
             ['email' => $data['email']],
             [
