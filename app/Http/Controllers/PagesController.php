@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use App\Models\User;
+use App\Models\Entry;
+use Carbon\Carbon;
 
 class PagesController extends Controller
 {
@@ -14,7 +18,7 @@ class PagesController extends Controller
      */
     public function home(Request $request)
     {
-        //
+        return Inertia::render('Home');
     }
 
     /**
@@ -25,7 +29,46 @@ class PagesController extends Controller
      */
     public function register(Request $request)
     {
-        //
+
+        $data = $request->validate([
+            'first_name' => ['required'],
+            'last_name' => ['required'],
+            'email' => ['required', 'email'],
+            'phone' => ['required'],
+            'accepts_rules' => [],
+            'subscribed' => [],
+        ]);
+
+        $user = User::firstOrCreate(
+            ['email' => $data['email']],
+            [
+                'first_name' => $data['first_name'],
+                'last_name' => $data['last_name'],
+                'phone' => $data['phone'],
+                'accepts_rules' => $data['accepts_rules'],
+                'subscribed' => $data['subscribed'],
+            ]
+        );
+
+        $responseMessage = 'Registered for today. Thank you!';
+
+        $entryForUser = Entry::where('user_id', $user->id)->orderByDesc('created_at')->get()[0] ?? null;
+
+        if( $entryForUser ) {
+            if( !Carbon::parse($entryForUser->created_at)->isToday()) {
+                Entry::create(['user_id' => $user->id]);
+            } else {
+                $responseMessage = 'Already Entered today. Try again tomorrow!';
+            }
+        }
+        else {
+            Entry::create(['user_id' => $user->id]);
+        }
+
+
+        return Inertia::render('Confirmation', [
+            'message' => $responseMessage
+        ]);
     }
 
     /**
@@ -36,6 +79,6 @@ class PagesController extends Controller
      */
     public function confirmation(Request $request)
     {
-        //
+        return true;
     }
 }
